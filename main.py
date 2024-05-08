@@ -31,6 +31,8 @@ def create_repo(repo_name, file_name, file_content):
 @bot.message_handler(commands=['start'])
 def main(message):
     markup = types.InlineKeyboardMarkup()
+    global tag_teams, tag_score, tag_time, tag_round
+    tag_teams, tag_score, tag_time, tag_round = False, False, False, False
     button1 = types.InlineKeyboardButton('Настроить трансляцию', callback_data='setup_step_0')
     button2 = types.InlineKeyboardButton('Инструкция для первичной настройки', callback_data='first_steps')
     markup.row(button1, button2)
@@ -46,20 +48,17 @@ def users_all(callback):
     if callback.data == 'setup_step_0' or callback.data == 'change_tag_teams' or callback.data == 'change_tag_score' \
             or callback.data == 'change_tag_time' or callback.data == 'change_tag_round':
         markup = types.InlineKeyboardMarkup()
+        bot.delete_message(callback.message.chat.id, callback.message.id)
         time_irl, time_time = False, False
 
         if callback.data == 'change_tag_teams':
-            tag_teams = not tag_teams
-            bot.delete_message(callback.message.chat.id, callback.message.id)
+            tag_teams = not tag_teams 
         if callback.data == 'change_tag_score':
-            tag_score = not tag_score
-            bot.delete_message(callback.message.chat.id, callback.message.id)
+            tag_score = not tag_score 
         if callback.data == 'change_tag_time':
-            tag_time = not tag_time
-            bot.delete_message(callback.message.chat.id, callback.message.id)
+            tag_time = not tag_time 
         if callback.data == 'change_tag_round':
-            tag_round = not tag_round
-            bot.delete_message(callback.message.chat.id, callback.message.id)
+            tag_round = not tag_round 
 
         if tag_teams:
             button1 = types.InlineKeyboardButton('Названия команд: ✔', callback_data='change_tag_teams')
@@ -134,7 +133,7 @@ def users_all(callback):
             button2 = types.InlineKeyboardButton('Время тайма: ✖', callback_data='change_time_time')
 
         change_time = True if time_irl or time_time else False
-        if not (tag_time ^ change_time):
+        if tag_time and change_time:
             button3 = types.InlineKeyboardButton('Продолжить настройку', callback_data='setup_step_2')
         else:
             button3 = types.InlineKeyboardButton('Продолжить настройку', callback_data='setup_step_1')
@@ -148,76 +147,75 @@ def users_all(callback):
 
     elif callback.data == 'setup_step_2':
         markup = types.InlineKeyboardMarkup()
-
         bot.delete_message(callback.message.chat.id, callback.message.id)
-        if tag_teams:
-            the_text = ''
-            with open("team_1.txt", "r") as file_team_1:
-                the_text += file_team_1.read()
-            the_text += ' — '
-            with open("team_2.txt", "r") as file_team_2:
-                the_text += file_team_2.read()
-
-            with open("team_1.txt", "r") as file_team_1:
-                the_text = ''
-                the_text += file_team_1.read()
-                if the_text != '':
-                    with open("team_2.txt", "r") as file_team_2:
-                        the_text = ''
-                        the_text += file_team_2.read()
-                        local_check = True if the_text != '' else False
-                else:
-                    local_check = False
-
-            if the_text == ' — ':
-                button1 = types.InlineKeyboardButton('Установить названия команд', callback_data='setup_teams')
-            else:
-                button1 = types.InlineKeyboardButton(f'{the_text}. Исправить?', callback_data='setup_teams')
-            markup.row(button1)
-        if tag_score:
-            the_text = ''
-            with open("score_1.txt", "r") as file_score_1:
-                the_text += file_score_1.read()
-            the_text += ' : '
-            with open("score_2.txt", "r") as file_score_2:
-                the_text += file_score_2.read()
-            
-            with open("score_1.txt", "r") as file_score_1:
-                the_text = ''
-                the_text += file_score_1.read()
-                if the_text != '':
-                    with open("score_2.txt", "r") as file_score_2:
-                        the_text = ''
-                        the_text += file_score_2.read()
-                        local_check = True if the_text != '' else False
-                else:
-                    local_check = False
-                    
-            if the_text == ' : ':
-                button2 = types.InlineKeyboardButton('Установить счёт', callback_data='setup_score')
-            else:
-                button2 = types.InlineKeyboardButton(f'{the_text}. Исправить?', callback_data='setup_teams')
-            markup.row(button2)
-        if tag_round:
-            the_text = ''
-            with open("type.txt", "r") as file_round:
-                the_text += file_round.read()
-                
-            with open("round_1.txt", "r") as file_round_1:
-                the_text = ''
-                the_text += file_round_1.read()
-                local_check = True if the_text != '' else False
-                
-            if the_text == '':
-                button3 = types.InlineKeyboardButton('Установить раунд', callback_data='setup_round')
-            else:
-                button3 = types.InlineKeyboardButton(f'{the_text}. Исправить?', callback_data='setup_teams')
-            markup.row(button3)
         if local_check:
             button4 = types.InlineKeyboardButton('Перейти к игре', callback_data='the_game')
             markup.row(button4)
             bot.send_message(callback.message.chat.id, f'Настройка завершена!', reply_markup=markup)
         else:
+            if tag_teams:
+                the_text = ''
+                with open("team_1.txt", "r") as file_team_1:
+                    the_text += file_team_1.read()
+                the_text += ' — '
+                with open("team_2.txt", "r") as file_team_2:
+                    the_text += file_team_2.read()
+
+                with open("team_1.txt", "r") as file_team_1:
+                    the_text = ''
+                    the_text += file_team_1.read()
+                    if the_text != '':
+                        with open("team_2.txt", "r") as file_team_2:
+                            the_text = ''
+                            the_text += file_team_2.read()
+                            local_check = True if the_text != '' else False
+                    else:
+                        local_check = False
+
+                if the_text == ' — ':
+                    button1 = types.InlineKeyboardButton('Установить названия команд', callback_data='setup_teams')
+                else:
+                    button1 = types.InlineKeyboardButton(f'{the_text}. Исправить?', callback_data='setup_teams')
+                markup.row(button1)
+            if tag_score:
+                the_text = ''
+                with open("score_1.txt", "r") as file_score_1:
+                    the_text += file_score_1.read()
+                the_text += ' : '
+                with open("score_2.txt", "r") as file_score_2:
+                    the_text += file_score_2.read()
+
+                with open("score_1.txt", "r") as file_score_1:
+                    the_text = ''
+                    the_text += file_score_1.read()
+                    if the_text != '':
+                        with open("score_2.txt", "r") as file_score_2:
+                            the_text = ''
+                            the_text += file_score_2.read()
+                            local_check = True if the_text != '' else False
+                    else:
+                        local_check = False
+
+                if the_text == ' : ':
+                    button2 = types.InlineKeyboardButton('Установить счёт', callback_data='setup_score')
+                else:
+                    button2 = types.InlineKeyboardButton(f'{the_text}. Исправить?', callback_data='setup_teams')
+                markup.row(button2)
+            if tag_round:
+                the_text = ''
+                with open("type.txt", "r") as file_round:
+                    the_text += file_round.read()
+
+                with open("round_1.txt", "r") as file_round_1:
+                    the_text = ''
+                    the_text += file_round_1.read()
+                    local_check = True if the_text != '' else False
+
+                if the_text == '':
+                    button3 = types.InlineKeyboardButton('Установить раунд', callback_data='setup_round')
+                else:
+                    button3 = types.InlineKeyboardButton(f'{the_text}. Исправить?', callback_data='setup_teams')
+                markup.row(button3)
             bot.send_message(callback.message.chat.id, f'Отлично! Переходим к данным.\n\n'
                                                        f'Выберите, что вы хотите настроить:'
                                                        f'', parse_mode='html', reply_markup=markup)
@@ -345,6 +343,7 @@ def users_all(callback):
                                                    f'', parse_mode='html', reply_markup=markup)
 
     elif callback.data == 'start_the_bot':
+        bot.delete_message(callback.message.chat.id, callback.message.id)
         tag_teams, tag_score, tag_time, tag_round = False, False, False, False
         markup = types.InlineKeyboardMarkup()
         button1 = types.InlineKeyboardButton('Настроить трансляцию', callback_data='setup_step_0')
@@ -353,9 +352,9 @@ def users_all(callback):
         bot.send_message(callback.message.chat.id,
                          f'Привет!\n\nЯ – ваш главный помощник для проведения трансляций через сервис OBS.'
                          f' \n\n<i>С чего начнём?</i>', parse_mode='html', reply_markup=markup)
-        bot.delete_message(callback.message.chat.id, callback.message.id - 1)
-
+        
     elif callback.data == 'readme':
+        bot.delete_message(callback.message.chat.id, callback.message.id)
         markup = types.InlineKeyboardMarkup()
         button = types.InlineKeyboardButton('Перейти к настройке', callback_data='setup_step_0')
         markup.row(button)
