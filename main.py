@@ -35,16 +35,21 @@ def main(message):
     tag_teams, tag_score, tag_time, tag_round = False, False, False, False
     button1 = types.InlineKeyboardButton('Настроить трансляцию', callback_data='setup_step_0')
     button2 = types.InlineKeyboardButton('Инструкция для первичной настройки', callback_data='first_steps')
-    markup.row(button1, button2)
+    button3 = types.InlineKeyboardButton('МВ 11-12.05.2024 ТЕСТ', callback_data='the_game')
+    markup.row(button1)
+    markup.row(button2)
+    markup.row(button3)
     bot.send_message(message.chat.id, f'Привет!\n\nЯ – ваш главный помощник для проведения трансляций через сервис OBS.'
                                       f' \n\n<i>С чего начнём?</i>', parse_mode='html', reply_markup=markup)
 
 
+'''
 @bot.callback_query_handler(func=lambda callback: True)
 def users_all(callback):
     global tag_teams, tag_score, tag_time, tag_round, change_tag
     global time_irl, time_time, change_time, local_check
     global the_text, game
+    
     if callback.data == 'setup_step_0' or callback.data == 'change_tag_teams' or callback.data == 'change_tag_score' \
             or callback.data == 'change_tag_time' or callback.data == 'change_tag_round':
         markup = types.InlineKeyboardMarkup()
@@ -106,8 +111,8 @@ def users_all(callback):
         markup.row(button6)
         bot.send_message(callback.message.chat.id, f'Просим Вас не торопиться и <b>выбрать</b>, что пригодится Вам для'
                                                    f' проведения трансляции:', parse_mode='html', reply_markup=markup)
-        
-    elif (callback.data == 'setup_step_1' and tag_time) \
+
+    elif (callback.data == 'CHANGE_IT:setup_step_1' and tag_time) \
             or callback.data == 'change_time_irl' or callback.data == 'change_time_time':
         markup = types.InlineKeyboardMarkup()
         bot.delete_message(callback.message.chat.id, callback.message.id)
@@ -293,13 +298,18 @@ def users_all(callback):
             button = types.InlineKeyboardButton('Продолжить настройку', callback_data='setup_step_2')
         markup.row(button)
         bot.send_message(callback.message.chat.id, f'Текущий раунд указан.', reply_markup=markup)
+'''
 
-    elif callback.data == 'the_game':
-        game = True
+
+@bot.callback_query_handler(func=lambda callback: True)
+def users_all(callback):
+    if callback.data == 'the_game' or callback.data == 'goal_1' or callback.data == 'goal_2':
+        # game = True
         markup = types.InlineKeyboardMarkup()
         bot.delete_message(callback.message.chat.id, callback.message.id)
-        the_text = '\n'
+        global the_text
 
+        '''
         if tag_teams:
             the_text += '\n<b>Команды</b>: '
             with open("team_1.txt", "r") as file_team_1:
@@ -328,9 +338,34 @@ def users_all(callback):
                 the_text += file_round_1.read()
             button5 = types.InlineKeyboardButton('Изменить раунд', callback_data='setup_round')
             markup.row(button5)
+        '''
 
+        if callback.data == 'goal_1':
+            with open("score_1.txt", "a") as file_score_1:
+                score = int(file_score_1.read())
+                score += 1
+                file_score_1.read(score)
+
+        if callback.data == 'goal_2':
+            with open("score_2.txt", "a") as file_score_2:
+                score = int(file_score_2.read())
+                score += 1
+                file_score_2.read(score)
+
+        the_text += '\n\n<b>Счёт</b>: '
+        with open("score_1.txt", "r") as file_score_1:
+            the_text += file_score_1.read()
+            the_text += ' — '
+            with open("score_2.txt", "r") as file_score_2:
+                the_text += file_score_2.read()
+        button2 = types.InlineKeyboardButton('Гол 1', callback_data='goal_1')
+        button3 = types.InlineKeyboardButton('Изменить', callback_data='setup_score')
+        button4 = types.InlineKeyboardButton('Гол 2', callback_data='goal_2')
+        markup.row(button2, button3, button4)
+        '''
         button6 = types.InlineKeyboardButton('Вернуться в начало', callback_data='game_stop_confirmation')
         markup.row(button6)
+        '''
         bot.send_message(callback.message.chat.id, f'Идёт игра. {the_text}', parse_mode='html', reply_markup=markup)
 
     elif callback.data == 'game_stop_confirmation':
